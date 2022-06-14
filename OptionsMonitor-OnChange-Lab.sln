@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32526.322
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{8D1C9C1C-FC59-4397-BBF9-2A09570B2080}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		NuGet.config = NuGet.config
+		ReadMe.md = ReadMe.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{BD8DA98F-28EA-449A-8A14-5FAFB4A33B1C}"
+	ProjectSection(SolutionItems) = preProject
+		Source\ReadMe.md = Source\ReadMe.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{BAC8BF23-602C-4A5C-BFCB-DD30FC181B28}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Integration-tests", "Tests\Integration-tests\Integration-tests.csproj", "{8A699F19-EDC2-4F7C-82E4-049774C863D0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8A699F19-EDC2-4F7C-82E4-049774C863D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A699F19-EDC2-4F7C-82E4-049774C863D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A699F19-EDC2-4F7C-82E4-049774C863D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A699F19-EDC2-4F7C-82E4-049774C863D0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8A699F19-EDC2-4F7C-82E4-049774C863D0} = {BAC8BF23-602C-4A5C-BFCB-DD30FC181B28}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3390F4A2-F26C-4DBD-A57A-DE04E0FFD51B}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,1 @@
+Each test creates a folder in this directory, named with a new guid, where appsettings-files are copied so they can then be changed.
