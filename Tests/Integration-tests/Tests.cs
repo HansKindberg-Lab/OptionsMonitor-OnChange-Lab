@@ -13,7 +13,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IntegrationTests
 {
-	// ReSharper disable All_
+	// ReSharper disable All
 	[TestClass]
 	[SuppressMessage("Style", "IDE0063:Use simple 'using' statement")]
 	public class Tests
