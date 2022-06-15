@@ -355,6 +355,55 @@ namespace IntegrationTests
 			};
 		}
 
+		[TestMethod]
+		public async Task ForeachConfiguredOptionsAnOnChangeTriggerWillBeTriggered()
+		{
+			await this.NumberOfTriggeredChangesTest(1, 1);
+			await this.NumberOfTriggeredChangesTest(2, 2);
+			await this.NumberOfTriggeredChangesTest(4, 4);
+		}
+
+		protected internal virtual async Task NumberOfTriggeredChangesTest(int numberOfTimesToConfigureOptions, int expectedNumberOfTriggeredChanges)
+		{
+			var numberOfTriggeredChanges = 0;
+			var temporaryTestDirectory = await this.CreateTemporaryTestDirectory(_appSettingsFileName);
+
+			try
+			{
+				var configuration = await this.CreateConfiguration(temporaryTestDirectory);
+				var services = await this.CreateServices(configuration);
+
+				for(var i = 0; i < numberOfTimesToConfigureOptions; i++)
+				{
+					services.Configure<EmptyOptions>(configuration);
+				}
+
+				await using(var serviceProvider = services.BuildServiceProvider())
+				{
+					var optionsMonitor = serviceProvider.GetRequiredService<IOptionsMonitor<EmptyOptions>>();
+
+					var onChange = optionsMonitor.OnChange((options) => { numberOfTriggeredChanges++; });
+
+					Assert.AreEqual(0, numberOfTriggeredChanges);
+
+					// Do the change.
+					File.Copy(Path.Combine(_resourcesDirectoryPath, _appSettingsFileName), Path.Combine(temporaryTestDirectory, _appSettingsFileName), true);
+
+					// Wait for the change to complete.
+					Thread.Sleep(500);
+
+					onChange.Dispose();
+
+					Assert.AreEqual(expectedNumberOfTriggeredChanges, numberOfTriggeredChanges);
+				}
+			}
+			finally
+			{
+				if(Directory.Exists(temporaryTestDirectory))
+					Directory.Delete(temporaryTestDirectory, true);
+			}
+		}
+
 		#endregion
 	}
 	// ReSharper restore All
