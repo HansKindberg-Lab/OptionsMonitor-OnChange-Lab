@@ -66,6 +66,59 @@ namespace IntegrationTests
 		}
 
 		[TestMethod]
+		public async Task Change_EmptyOptionsMonitorOnConfigurationRoot_Triggers()
+		{
+			EmptyOptions onChangeOptions = null;
+			EmptyOptions onNamedChangeOptions = null;
+			string onNamedChangeName = null;
+
+			var temporaryTestDirectory = await this.CreateTemporaryTestDirectory(_appSettingsFileName);
+
+			try
+			{
+				var configuration = await this.CreateConfiguration(temporaryTestDirectory);
+				var services = await this.CreateServices(configuration);
+
+				services.Configure<EmptyOptions>(configuration);
+
+				await using(var serviceProvider = services.BuildServiceProvider())
+				{
+					var optionsMonitor = serviceProvider.GetRequiredService<IOptionsMonitor<EmptyOptions>>();
+
+					var onChange = optionsMonitor.OnChange((options) => { onChangeOptions = options; });
+
+					var onNamedChange = optionsMonitor.OnChange((options, name) =>
+					{
+						onNamedChangeOptions = options;
+						onNamedChangeName = name;
+					});
+
+					Assert.IsNull(onChangeOptions);
+					Assert.IsNull(onNamedChangeOptions);
+					Assert.IsNull(onNamedChangeName);
+
+					// Do the change.
+					File.Copy(Path.Combine(_resourcesDirectoryPath, _appSettingsFileName), Path.Combine(temporaryTestDirectory, _appSettingsFileName), true);
+
+					// Wait for the change to complete.
+					Thread.Sleep(500);
+
+					onChange.Dispose();
+					onNamedChange.Dispose();
+
+					Assert.IsNotNull(onChangeOptions);
+					Assert.IsNotNull(onNamedChangeOptions);
+					Assert.AreEqual(string.Empty, onNamedChangeName);
+				}
+			}
+			finally
+			{
+				if(Directory.Exists(temporaryTestDirectory))
+					Directory.Delete(temporaryTestDirectory, true);
+			}
+		}
+
+		[TestMethod]
 		public async Task Change_IfNoOptionsActuallyAreChanged_ShouldTriggerAll()
 		{
 			var expectedTriggeredChanges = new List<TriggeredChange>
@@ -138,7 +191,7 @@ namespace IntegrationTests
 		}
 
 		[TestMethod]
-		public async Task Change_ObjectOptionsMonitorOnConfigurationRoot_Test()
+		public async Task Change_ObjectOptionsMonitorOnConfigurationRoot_DoNotTrigger()
 		{
 			object onChangeObject = null;
 			object onNamedChangeObject = null;
@@ -151,7 +204,7 @@ namespace IntegrationTests
 				var configuration = await this.CreateConfiguration(temporaryTestDirectory);
 				var services = await this.CreateServices(configuration);
 
-				services.Configure<EmptyOptions>(configuration);
+				services.Configure<object>(configuration);
 
 				await using(var serviceProvider = services.BuildServiceProvider())
 				{
@@ -178,9 +231,9 @@ namespace IntegrationTests
 					onChange.Dispose();
 					onNamedChange.Dispose();
 
-					Assert.IsNotNull(onChangeObject);
-					Assert.IsNotNull(onNamedChangeObject);
-					Assert.AreEqual(string.Empty, onNamedChangeName);
+					Assert.IsNull(onChangeObject);
+					Assert.IsNull(onNamedChangeObject);
+					Assert.IsNull(onNamedChangeName);
 				}
 			}
 			finally
