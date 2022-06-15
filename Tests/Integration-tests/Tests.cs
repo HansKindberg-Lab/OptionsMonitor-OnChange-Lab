@@ -9,6 +9,7 @@ using IntegrationTests.Configuration.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace IntegrationTests
@@ -361,6 +362,56 @@ namespace IntegrationTests
 			await this.NumberOfTriggeredChangesTest(1, 1);
 			await this.NumberOfTriggeredChangesTest(2, 2);
 			await this.NumberOfTriggeredChangesTest(4, 4);
+		}
+
+		[TestMethod]
+		public async Task MonitorChangesWithConfigurationReloadTokenTest()
+		{
+			var numberOfTriggeredConfigurationChanges = 0;
+			var numberOfTriggeredOptionsChanges = 0;
+			var temporaryTestDirectory = await this.CreateTemporaryTestDirectory(_appSettingsFileName);
+
+			try
+			{
+				var configuration = await this.CreateConfiguration(temporaryTestDirectory);
+				var services = await this.CreateServices(configuration);
+
+				// We configure EmptyOptions three times just to confirm that they do not affect on-configuration-by-reload-token-changes (onConfigurationChange below).
+				services.Configure<EmptyOptions>(configuration);
+				services.Configure<EmptyOptions>(configuration);
+				services.Configure<EmptyOptions>(configuration);
+
+				await using(var serviceProvider = services.BuildServiceProvider())
+				{
+					var optionsMonitor = serviceProvider.GetRequiredService<IOptionsMonitor<EmptyOptions>>();
+
+					var onOptionsChange = optionsMonitor.OnChange((options) => { numberOfTriggeredOptionsChanges++; });
+
+					var configurationFromServiceProvider = serviceProvider.GetRequiredService<IConfiguration>();
+
+					var onConfigurationChange = ChangeToken.OnChange(() => configurationFromServiceProvider.GetReloadToken(), () => { numberOfTriggeredConfigurationChanges++; });
+
+					Assert.AreEqual(0, numberOfTriggeredOptionsChanges);
+					Assert.AreEqual(0, numberOfTriggeredConfigurationChanges);
+
+					// Do the change.
+					File.Copy(Path.Combine(_resourcesDirectoryPath, _appSettingsFileName), Path.Combine(temporaryTestDirectory, _appSettingsFileName), true);
+
+					// Wait for the change to complete.
+					Thread.Sleep(500);
+
+					onConfigurationChange.Dispose();
+					onOptionsChange.Dispose();
+
+					Assert.AreEqual(1, numberOfTriggeredConfigurationChanges);
+					Assert.AreEqual(3, numberOfTriggeredOptionsChanges);
+				}
+			}
+			finally
+			{
+				if(Directory.Exists(temporaryTestDirectory))
+					Directory.Delete(temporaryTestDirectory, true);
+			}
 		}
 
 		protected internal virtual async Task NumberOfTriggeredChangesTest(int numberOfTimesToConfigureOptions, int expectedNumberOfTriggeredChanges)
